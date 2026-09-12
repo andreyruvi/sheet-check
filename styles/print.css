@@ -1,0 +1,134 @@
+/*
+ * Sheet Check — print sheet.
+ *
+ * A check report gets printed, marked up in pen and handed to whoever is
+ * fixing the set, so the print view is the report alone: no inputs, no
+ * buttons, and everything forced to black on white so a dark-theme screen
+ * does not print a black page.
+ *
+ * There is no canvas in this tool, which is why the palette can live here in
+ * `@media print` rather than needing to be re-applied before the dialog opens.
+ */
+
+@page {
+  size: A4 portrait;
+  margin: 15mm;
+}
+
+:root {
+  --c-paper: #ffffff;
+  --c-panel: #ffffff;
+  --c-ink: #000000;
+  --c-ink-soft: #333333;
+  --c-rule: #999999;
+  --c-rule-soft: #cccccc;
+  --c-error: #000000;
+  --c-error-bg: #ededed;
+  --c-warning: #000000;
+  --c-warning-bg: #f4f4f4;
+  --c-note: #000000;
+  --c-note-bg: #fafafa;
+  --c-clear: #000000;
+  --c-clear-bg: #ffffff;
+  --c-focus: #000000;
+}
+
+body {
+  padding: 0;
+  background: #fff;
+  color: #000;
+  font-size: 10pt;
+}
+
+/* The inputs, the buttons and the live region have no place on a sheet. */
+.inputs,
+.masthead__actions,
+.export-row,
+.drop,
+.skip-link,
+.status,
+.empty[hidden],
+.pdf-note {
+  display: none !important;
+}
+
+.masthead {
+  border-bottom: 1pt solid #000;
+  padding-bottom: 3mm;
+}
+
+.intro { display: none; }
+
+.layout { display: block; }
+
+.panel {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  background: none;
+}
+
+.panel__title { font-size: 8pt; margin-bottom: 2mm; }
+
+.verdict {
+  border: 0.75pt solid #000;
+  font-size: 11pt;
+  break-inside: avoid;
+}
+
+.counts { grid-template-columns: repeat(4, 1fr); gap: 2mm; }
+.count { border: 0.5pt solid #999; break-inside: avoid; }
+.count__n { font-size: 12pt; }
+
+.parse-note { font-size: 8pt; margin-top: 2mm; }
+
+.warnings {
+  border: 0.5pt solid #000;
+  background: none;
+  font-size: 8.5pt;
+}
+
+h3 { margin: 5mm 0 2mm; font-size: 9.5pt; }
+
+.group { margin: 4mm 0 2mm; font-size: 8pt; }
+
+.finding {
+  border-left: 2pt solid #000;
+  border-top: 0.25pt solid #ccc;
+  background: none;
+  padding: 2mm 3mm;
+  margin-bottom: 3mm;
+  break-inside: avoid;
+}
+
+/* Severity has to survive black and white, so it is marked as well as coloured. */
+.tag { border: 0.5pt solid #000; background: none; }
+.finding[data-severity="error"] .tag::after { content: ' ■'; }
+.finding[data-severity="warning"] .tag::after { content: ' ▲'; }
+.finding[data-severity="note"] .tag::after { content: ' ·'; }
+
+.finding__sheets li { border: 0.25pt solid #999; background: none; }
+.finding__sheets--dense li { border: 0; }
+
+.coverage { grid-template-columns: 1fr 1fr; gap: 3mm; }
+.coverage__col { border: 0.5pt solid #999; break-inside: avoid; }
+
+.table-scroll { overflow: visible; }
+.data-table { font-size: 8pt; }
+.data-table th,
+.data-table td { border-bottom: 0.25pt solid #bbb; padding: 1mm 1.5mm; }
+.data-table thead th { border-bottom: 0.75pt solid #666; }
+.data-table tr { break-inside: avoid; }
+.data-table tr[data-valid="false"] { background: none; }
+.data-table tr[data-valid="false"] .read-as::after { content: ' ▲'; }
+
+.footer {
+  margin-top: 5mm;
+  padding-top: 2mm;
+  border-top: 0.5pt solid #999;
+  font-size: 7.5pt;
+  max-width: none;
+  break-inside: avoid;
+}
+
+a { color: #000; text-decoration: none; }
