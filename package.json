@@ -1,0 +1,22 @@
+{
+  "name": "sheet-check",
+  "version": "1.0.0",
+  "description": "Read a drawing register before you issue it: numbering gaps and duplicates, blank title-block fields, stale revisions, and paper sizes read straight out of the PDF. No dependencies, no build, no server.",
+  "type": "module",
+  "license": "MIT",
+  "author": "Duong L. (https://github.com/andreyruvi)",
+  "homepage": "https://andreyruvi.github.io/sheet-check/",
+  "repository": { "type": "git", "url": "git+https://github.com/andreyruvi/sheet-check.git" },
+  "bugs": { "url": "https://github.com/andreyruvi/sheet-check/issues" },
+  "keywords": [
+    "architecture", "drawing-register", "sheet-list", "quality-assurance",
+    "revit", "pdf", "title-block", "revision-control", "permit-drawings", "checklist"
+  ],
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "serve": "node tools/serve.js"
+  },
+  "engines": { "node": ">=20" },
+  "private": false,
+  "files": ["index.html", "src", "styles", "assets"]
+}

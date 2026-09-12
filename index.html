@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sheet Check — read a drawing register before you issue it</title>
+<meta name="description" content="Paste a sheet list and drop the PDF set: get back the numbering gaps, duplicates, blank title-block fields, stale revisions and paper-size mismatches. Runs entirely in the browser.">
+<meta name="color-scheme" content="light dark">
+<link rel="stylesheet" href="styles/sheet-check.css">
+<link rel="stylesheet" href="styles/print.css" media="print">
+<link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+</head>
+<body data-state="clear">
+
+<a class="skip-link" href="#report">Skip to the report</a>
+
+<header class="masthead">
+  <div class="masthead__title">
+    <h1>Sheet Check</h1>
+    <p>Read the register before the set goes out.</p>
+  </div>
+  <div class="masthead__actions">
+    <button type="button" class="button" data-action="example">Load an example</button>
+    <button type="button" class="button" data-action="print">Print report</button>
+    <button type="button" class="button" data-action="clear">Clear</button>
+  </div>
+</header>
+
+<p class="intro">
+  Paste a sheet list — a Revit or ArchiCAD export, a column out of Excel, or just
+  the numbers — and drop the PDF set anywhere on this page. You get back the
+  numbering gaps, the duplicates, the blank title-block fields, the sheets left
+  on an old revision and the paper sizes that do not match the rest. Nothing is
+  uploaded: the register never leaves this machine.
+</p>
+
+<main class="layout">
+
+  <form class="panel inputs" data-form aria-label="Register and rules">
+
+    <section class="block">
+      <h2 class="block__title">The register</h2>
+      <div class="field">
+        <label for="index">Sheet list</label>
+        <textarea id="index" name="index" data-index-input rows="12" spellcheck="false"
+          placeholder="Sheet Number,Sheet Name,Revision,Date&#10;A-101,Ground Floor Plan,C,2026-09-04&#10;A-102,First Floor Plan,C,2026-09-04"></textarea>
+        <p class="hint">
+          Commas, tabs, semicolons or plain columns — the separator, the heading row
+          and the meaning of each column are worked out for you, and the report says
+          what was assumed.
+        </p>
+      </div>
+
+      <div class="drop" data-drop tabindex="0" role="group" aria-label="Attach files">
+        <p class="drop__lead">Drop a CSV or the PDF set here</p>
+        <p class="drop__or">
+          <button type="button" class="button button--small" data-action="choose-index">Choose a sheet list</button>
+          <button type="button" class="button button--small" data-action="choose-pdf">Choose a PDF</button>
+        </p>
+      </div>
+
+      <p class="pdf-note" data-pdf-note data-state="none"></p>
+      <p><button type="button" class="button button--small" data-action="clear-pdf">Remove the PDF</button></p>
+    </section>
+
+    <section class="block">
+      <h2 class="block__title">This issue</h2>
+      <div class="grid">
+        <div class="field">
+          <label for="project">Project</label>
+          <input type="text" id="project" name="project" autocomplete="off" placeholder="Plot 12, Nguyễn Trãi">
+        </div>
+        <div class="field">
+          <label for="issue">Issue</label>
+          <input type="text" id="issue" name="issue" autocomplete="off" placeholder="Planning submission">
+        </div>
+      </div>
+      <p class="hint">Both appear at the top of the exported report. Neither affects the checks.</p>
+    </section>
+
+    <section class="block">
+      <h2 class="block__title">Numbering convention</h2>
+      <div class="field">
+        <label for="convention">Pattern</label>
+        <input type="text" id="convention" name="convention" list="convention-presets"
+          autocomplete="off" placeholder="leave blank to skip this check">
+        <datalist id="convention-presets" data-convention-presets></datalist>
+        <p class="hint">
+          <code>@</code> is a letter and <code>#</code> a digit; add <code>+</code> for
+          one or more and <code>?</code> to make the token optional. So
+          <code>@+-###</code> matches <code>A-101</code> and <code>AD-101</code>, and
+          <code>@+-###@?</code> also allows <code>A-101a</code>. For anything else,
+          start the pattern with <code>custom:</code> and write a regular expression.
+        </p>
+      </div>
+    </section>
+
+    <section class="block">
+      <h2 class="block__title">Required sheets</h2>
+      <div class="field">
+        <label for="required">Must be in this issue</label>
+        <input type="text" id="required" name="required" autocomplete="off"
+          placeholder="A-101 A-102 A-201 A-301">
+        <p class="hint">
+          Separate with spaces or commas. Each is matched however it is written, so
+          <code>A101</code> and <code>A-101</code> count as the same sheet.
+        </p>
+      </div>
+    </section>
+
+    <section class="block">
+      <h2 class="block__title">Title-block fields</h2>
+      <p class="hint">Only columns your register actually has can be checked.</p>
+      <div class="checks">
+        <div class="field field--check">
+          <input type="checkbox" id="checkName" name="checkName" checked>
+          <label for="checkName">Sheet name</label>
+        </div>
+        <div class="field field--check">
+          <input type="checkbox" id="checkRevision" name="checkRevision" checked>
+          <label for="checkRevision">Revision</label>
+        </div>
+        <div class="field field--check">
+          <input type="checkbox" id="checkDate" name="checkDate" checked>
+          <label for="checkDate">Revision date</label>
+        </div>
+        <div class="field field--check">
+          <input type="checkbox" id="checkScale" name="checkScale" checked>
+          <label for="checkScale">Scale</label>
+        </div>
+      </div>
+    </section>
+
+  </form>
+
+  <div class="panel report" id="report" data-report>
+
+    <h2 class="panel__title">Report</h2>
+
+    <p class="verdict" data-verdict data-state="clear">—</p>
+    <div class="counts" data-counts></div>
+
+    <p class="parse-note" data-parse-note hidden></p>
+    <ul class="warnings" data-warnings hidden></ul>
+
+    <div class="export-row">
+      <button type="button" class="button" data-action="copy-md">Copy report</button>
+      <button type="button" class="button" data-action="export-md">Save report (Markdown)</button>
+      <button type="button" class="button" data-action="export-csv">Save report (CSV)</button>
+      <button type="button" class="button" data-action="export-sheets">Save the register (CSV)</button>
+    </div>
+
+    <p class="empty" data-empty>
+      Nothing to report yet. Paste a sheet list above, or load the example to see
+      what a set with problems in it looks like.
+    </p>
+
+    <div class="findings" data-findings hidden></div>
+
+    <h3>What was checked</h3>
+    <div class="coverage" data-coverage></div>
+
+    <h3>The register as it was read <span class="muted" data-sheet-count></span></h3>
+    <div class="table-scroll">
+      <table class="data-table" data-sheet-table hidden>
+        <caption class="visually-hidden">Every row of the register, with the sheet number as the tool understood it</caption>
+        <thead><tr></tr></thead>
+        <tbody data-sheet-body></tbody>
+      </table>
+    </div>
+
+  </div>
+
+</main>
+
+<p class="status" data-status role="status" aria-live="polite"></p>
+
+<footer class="footer">
+  <p>
+    Sheet Check is original work by <a href="https://github.com/andreyruvi">Duong L.</a>
+    — no dependencies, no tracking, no server.
+    <a href="https://github.com/andreyruvi/sheet-check">Source and licence on GitHub</a>.
+  </p>
+  <p class="hint">
+    The tool reads a register and a PDF's page geometry. It does not read the
+    drawings, and it cannot tell you whether what is on them is right. A clean
+    report is not an approval.
+  </p>
+</footer>
+
+<script type="module" src="src/main.js"></script>
+</body>
+</html>
